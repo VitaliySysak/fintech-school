@@ -1,0 +1,68 @@
+{% include "header.html" %}
+<style>
+  .nav-element {
+      color: var(--white-text);
+  }
+
+  .logo-title {
+      color: var(--font-yellow);
+  }
+</style>
+  
+    <div class="auth-container">
+      <div class="auth-title-container">
+        <h1>СТАНЬ ЧАСТИНОЮ ШКОЛИ FINTECH</h1>
+      </div>
+
+      <div class="auth-card-container">
+        <form class="card-content-container" action="{{ url_for('register') }}" id="authForm" method="post">
+          {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
+          <p class="text-center">{{ message }}</p>
+          {% endfor %} {% endif %} {% endwith %}
+          <div class="name-surname-container">
+            <div class="name-surname-block">
+              <h2 class="label-title">Ім'я</h2>
+              <input class="form-control register-input" type="name" name="name" required="required">
+            </div>
+            <div class="name-surname-block">
+              <h2 class="label-title">Прізвище</h2>
+              <input class="form-control register-input" type="surname" name="surname" required="required">
+            </div>
+          </div>
+
+          <h2 class="label-title">Логін</h2>
+          <input class="form-control register-input" type="login" name="login" id="login" required="required">
+          <h2 class="label-title">Пароль</h2>
+          <input class="form-control register-input" type="password" name="password" id="password" required="required">
+          <h2 class="label-title">Повторіть пароль</h2>
+          <input class="form-control register-input" type="password" name="second-password" required="required">
+          <h2 class="label-title">Електронна пошта</h2>
+          <input class="form-control register-input" type="email" name="email" required="required">
+        <div class="auth-options">
+          <label class="d-flex align-items-center"><input type="checkbox" id="rememberMe" value="remember-me" /> Remember Me</label>
+          <a class="account-options" href="#">FORGOT PASSWORD?</a>
+        </div>
+        <button class="auth-button" type="submit">Sign Up</button>
+        <a class="account-options" href="{{ url_for('login') }}">Вже маєш аккаунт?</a>
+      </form>
+      </div>
+      
+    </div>
+    <script>
+      document.getElementById('authForm').addEventListener('submit', function (event) {
+
+        const login = document.getElementById('login').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+      
+        if (rememberMe) {
+          localStorage.setItem('login', login);
+          localStorage.setItem('password', password); 
+        } else {
+          localStorage.removeItem('username');
+          localStorage.removeItem('password');
+        }
+      });
+    </script>
+  </div>
+<div class="register-bg-image"></div>
