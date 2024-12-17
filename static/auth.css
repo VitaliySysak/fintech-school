@@ -225,7 +225,7 @@
     }
 
     .register-bg-image {
-        height: 160%;
+        height: 130%;
     }
     
     .login-bg-image {
@@ -233,9 +233,9 @@
     }
 
     .auth-options > label > input:checked::after {
-        top: 30%;
+        top: 32%;
         left: 55%;
-        font-size: 3.5vw;
+        font-size: 5vw;
     }
 }
 
