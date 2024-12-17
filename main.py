@@ -8,6 +8,9 @@ import os
 from datetime import datetime
 import dotenv
 
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+
 dotenv.load_dotenv()
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
@@ -16,6 +19,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI")
 # app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///fintech-school.db"
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('SMTP_EMAIL')
+app.config['MAIL_PASSWORD'] = os.environ.get('SMTP_PASSWORD')
+mail = Mail(app)
+s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 db.init_app(app)
 Bootstrap5(app)
@@ -133,6 +143,57 @@ def delete_user(user_id):
     db.session.commit()
 
     return redirect(url_for("admin"))
+
+@app.route('/forgot-password', methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        flash("Надіслано інструкцію для скидання паролю!")
+        if user:
+            token = s.dumps(email, salt='password-reset')
+            reset_link = url_for('reset_password', token=token, _external=True)
+            
+            msg = Message('Запит на скидання пароля', sender=os.environ.get('SMTP_EMAIL'), recipients=[email])
+            msg.body = f"Щоб скинути пароль, натисніть на посилання: {reset_link}"
+            mail.send(msg)
+
+        return redirect(url_for('forgot_password'))
+    return render_template("forgot_password.html")
+
+@app.route('/reset-password/<token>', methods=["GET", "POST"])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt='password-reset', max_age=3600)
+    except SignatureExpired:
+        flash("This token has expired. Please request a new password reset.")
+        return redirect(url_for('forgot_password'))
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Invalid token or user does not exist.")
+        return redirect(url_for('forgot_password'))
+
+    if request.method == "POST":
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm-password')
+
+        if len(new_password) < 8:
+            flash("Пароль повинен містити щонайменше 8 символів.")
+            return redirect(url_for('reset_password', token=token))
+        if new_password != confirm_password:
+            flash("Паролі не співпадають.")
+            return redirect(url_for('reset_password', token=token))
+
+        user.password = generate_password_hash(new_password, method='pbkdf2:sha256', salt_length=8)
+        db.session.commit()
+
+        flash("Ваш пароль було успішно скинуто!")
+        return redirect(url_for('login'))
+
+    return render_template("reset_password.html")
+
 
 if __name__ == "__main__":
     app.run(port=5000)
