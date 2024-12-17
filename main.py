@@ -160,6 +160,7 @@ def forgot_password():
             mail.send(msg)
 
         return redirect(url_for('forgot_password'))
+    
     return render_template("forgot_password.html")
 
 @app.route('/reset-password/<token>', methods=["GET", "POST"])
